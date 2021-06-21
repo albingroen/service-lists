@@ -4,7 +4,7 @@ import prisma from "../lib/prisma";
 export default async function routes(fastify: FastifyInstance) {
   // Get all lists
   fastify.get("/", async () => {
-    return prisma.list.findMany();
+    return prisma.list.findMany({ include: { items: true } });
   });
 
   // Get one list

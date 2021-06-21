@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "fastify-cors";
 
 import listRoutes from "./routes/lists";
+import listItemRoutes from "./routes/list-items";
 
 // Enable environment variables
 dotenv.config();
@@ -20,6 +21,7 @@ fastify.get("/", (_, res) => {
 
 // Register other routes
 fastify.register(listRoutes, { prefix: "/lists" });
+fastify.register(listItemRoutes, { prefix: "/lists/:listId/list-items" });
 
 // Listen for port in environment variables
 const port = process.env.PORT || 5000;

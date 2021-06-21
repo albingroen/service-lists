@@ -7,6 +7,7 @@ var fastify_1 = __importDefault(require("fastify"));
 var dotenv_1 = __importDefault(require("dotenv"));
 var fastify_cors_1 = __importDefault(require("fastify-cors"));
 var lists_1 = __importDefault(require("./routes/lists"));
+var list_items_1 = __importDefault(require("./routes/list-items"));
 // Enable environment variables
 dotenv_1.default.config();
 // Initiate Fastify
@@ -19,6 +20,7 @@ fastify.get("/", function (_, res) {
 });
 // Register other routes
 fastify.register(lists_1.default, { prefix: "/lists" });
+fastify.register(list_items_1.default, { prefix: "/lists/:listId/list-items" });
 // Listen for port in environment variables
 var port = process.env.PORT || 5000;
 // Start server
