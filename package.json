@@ -5,12 +5,19 @@
   "author": "Albin Groen <albin.groen@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "dev": "concurrently 'tsc -w' 'nodemon .'",
     "build": "tsc -p tsconfig.json",
-    "start": "node .",
-    "dev": "tsc -w"
+    "start": "node ."
   },
   "devDependencies": {
     "@types/node": "^15.12.4",
+    "concurrently": "^6.2.0",
+    "dotenv": "^10.0.0",
+    "nodemon": "^2.0.7",
     "typescript": "^4.3.4"
+  },
+  "dependencies": {
+    "fastify": "^3.18.0",
+    "fastify-cors": "^6.0.1"
   }
 }
