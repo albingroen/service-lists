@@ -8,7 +8,7 @@
     "dev": "concurrently 'tsc -w' 'nodemon .'",
     "format": "prettier --write .",
     "build": "tsc -p tsconfig.json",
-    "start": "yarn build && node ."
+    "start": "node ."
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
