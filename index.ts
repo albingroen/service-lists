@@ -24,7 +24,7 @@ fastify.register(listRoutes, { prefix: "/lists" });
 fastify.register(listItemRoutes, { prefix: "/lists/:listId/list-items" });
 
 // Start server
-fastify.listen(process.env.PORT || 5000, function (err, address) {
+fastify.listen(process.env.PORT || 5000, "0.0.0.0", function (err, address) {
   if (err) {
     console.error(err);
     process.exit(1);
