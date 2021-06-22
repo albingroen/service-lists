@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import prisma from "../lib/prisma";
 import bcrypt from "bcrypt";
+import { verifyPassword } from "../lib/auth";
 
 export default async function routes(fastify: FastifyInstance) {
   // Get all lists
@@ -48,25 +49,55 @@ export default async function routes(fastify: FastifyInstance) {
   );
 
   // Update one list
-  fastify.put<{ Params: { id: string }; Body: { title: string } }>(
-    "/:id",
-    async (req) => {
-      return prisma.list.update({
-        where: {
-          id: req.params.id,
-        },
-        data: req.body,
-        select: {
-          passphrase: false,
-          title: true,
-          id: true,
-        },
-      });
-    }
-  );
+  fastify.put<{
+    Headers: { authentication: string };
+    Body: { title: string };
+    Params: { id: string };
+  }>("/:id", async (req) => {
+    const list = await prisma.list.findUnique({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    const res = await verifyPassword(
+      req.headers.authentication,
+      list.passphrase
+    );
+
+    if (!res) throw new Error("Unauthorized");
+
+    return prisma.list.update({
+      where: {
+        id: req.params.id,
+      },
+      data: req.body,
+      select: {
+        passphrase: false,
+        title: true,
+        id: true,
+      },
+    });
+  });
 
   // Delete one list
-  fastify.delete<{ Params: { id: string } }>("/:id", async (req) => {
+  fastify.delete<{
+    Headers: { authentication: string };
+    Params: { id: string };
+  }>("/:id", async (req) => {
+    const list = await prisma.list.findUnique({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    const res = await verifyPassword(
+      req.headers.authentication,
+      list.passphrase
+    );
+
+    if (!res) throw new Error("Unauthorized");
+
     const deleteList = prisma.list.delete({
       where: {
         id: req.params.id,
@@ -103,7 +134,7 @@ export default async function routes(fastify: FastifyInstance) {
         return null;
       }
 
-      const res = await bcrypt.compare(req.body.passphrase, list.passphrase);
+      const res = await verifyPassword(req.body.passphrase, list.passphrase);
 
       if (!res) throw new Error("Unauthorized");
 
