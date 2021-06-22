@@ -23,11 +23,8 @@ fastify.get("/", (_, res) => {
 fastify.register(listRoutes, { prefix: "/lists" });
 fastify.register(listItemRoutes, { prefix: "/lists/:listId/list-items" });
 
-// Listen for port in environment variables
-const port = process.env.PORT || 5000;
-
 // Start server
-fastify.listen(port, function (err, address) {
+fastify.listen(process.env.PORT || 5000, function (err, address) {
   if (err) {
     console.error(err);
     process.exit(1);
