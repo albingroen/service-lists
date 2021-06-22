@@ -1,10 +1,16 @@
 import { FastifyInstance } from "fastify";
 import prisma from "../lib/prisma";
+import bcrypt from "bcrypt";
 
 export default async function routes(fastify: FastifyInstance) {
   // Get all lists
   fastify.get("/", async () => {
-    return prisma.list.findMany({ include: { items: true } });
+    return prisma.list.findMany({
+      select: {
+        title: true,
+        id: true,
+      },
+    });
   });
 
   // Get one list
@@ -13,6 +19,11 @@ export default async function routes(fastify: FastifyInstance) {
       where: {
         id: req.params.id,
       },
+      select: {
+        items: true,
+        title: true,
+        id: true,
+      },
     });
   });
 
@@ -20,8 +31,18 @@ export default async function routes(fastify: FastifyInstance) {
   fastify.post<{ Body: { title: string; passphrase: string } }>(
     "/",
     async (req) => {
+      const salt = bcrypt.genSaltSync(10);
+      const hashedPassphrase = bcrypt.hashSync(req.body.passphrase, salt);
+
       return prisma.list.create({
-        data: req.body,
+        data: {
+          ...req.body,
+          passphrase: hashedPassphrase,
+        },
+        select: {
+          title: true,
+          id: true,
+        },
       });
     }
   );
@@ -35,16 +56,58 @@ export default async function routes(fastify: FastifyInstance) {
           id: req.params.id,
         },
         data: req.body,
+        select: {
+          passphrase: false,
+          title: true,
+          id: true,
+        },
       });
     }
   );
 
   // Delete one list
   fastify.delete<{ Params: { id: string } }>("/:id", async (req) => {
-    return prisma.list.delete({
+    const deleteList = prisma.list.delete({
       where: {
         id: req.params.id,
       },
+      select: {
+        id: true,
+      },
     });
+
+    const deleteListItems = prisma.listItem.deleteMany({
+      where: {
+        listId: req.params.id,
+      },
+    });
+
+    return prisma.$transaction([deleteListItems, deleteList]);
   });
+
+  // Authenticate a list
+  fastify.post<{ Params: { id: string }; Body: { passphrase: string } }>(
+    "/:id/auth",
+    async (req) => {
+      const list = await prisma.list.findUnique({
+        where: {
+          id: req.params.id,
+        },
+        select: {
+          passphrase: true,
+          id: true,
+        },
+      });
+
+      if (!list) {
+        return null;
+      }
+
+      const res = await bcrypt.compare(req.body.passphrase, list.passphrase);
+
+      if (!res) throw new Error("Unauthorized");
+
+      return true;
+    }
+  );
 }
